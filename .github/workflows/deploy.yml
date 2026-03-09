@@ -1,0 +1,52 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: ${{ secrets.SERVER_PORT || '22' }}
+        script: |
+          echo "🚀 开始部署..."
+          
+          # 进入项目目录
+          cd /opt/child-schedule-assistant || exit 1
+          
+          # 拉取最新代码
+          echo "📥 拉取最新代码..."
+          git pull origin master
+          
+          # 激活虚拟环境并安装依赖
+          echo "📦 安装依赖..."
+          source venv/bin/activate
+          pip install -r requirements.txt
+          
+          # 初始化数据库（如果有新迁移）
+          echo "🗄️ 初始化数据库..."
+          python database.py
+          
+          # 重启服务
+          echo "🔄 重启服务..."
+          sudo systemctl restart schedule-assistant
+          sudo systemctl restart schedule-assistant-scheduler
+          
+          # 检查服务状态
+          echo "✅ 检查服务状态..."
+          sudo systemctl is-active --quiet schedule-assistant && echo "Streamlit 服务运行正常" || echo "Streamlit 服务启动失败"
+          sudo systemctl is-active --quiet schedule-assistant-scheduler && echo "调度器服务运行正常" || echo "调度器服务启动失败"
+          
+          echo "🎉 部署完成！"
