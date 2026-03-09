@@ -96,7 +96,59 @@ git push -u origin master
 - **内存**: 至少 1GB RAM
 - **端口**: 8501（Streamlit 默认端口）
 
-### 3.2 服务器环境配置
+### 3.2 环境变量配置
+
+项目使用环境变量来管理敏感信息（API 密钥等）。在服务器上部署前，需要配置环境变量：
+
+```bash
+# 进入项目目录
+cd /opt/child-schedule-assistant
+
+# 复制环境变量模板
+cp .env.example .env
+
+# 编辑 .env 文件，填写实际的配置值
+nano .env
+```
+
+**必需的配置项：**
+
+```bash
+# Server 酱配置（用于微信通知）
+SERVERCHAN_SENDKEYS=SCTxxxxxxxxxxxxxxxx,SCTyyyyyyyyyyyyyyyy
+
+# 可选：阿里云短信配置
+ALIYUN_ACCESS_KEY_ID=your_access_key_id
+ALIYUN_ACCESS_KEY_SECRET=your_access_key_secret
+```
+
+**在 Systemd 服务中使用环境变量：**
+
+修改服务文件以加载环境变量：
+
+```bash
+sudo tee /etc/systemd/system/schedule-assistant.service > /dev/null <<EOF
+[Unit]
+Description=Child Schedule Assistant Streamlit App
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/child-schedule-assistant
+Environment=PATH=/opt/child-schedule-assistant/venv/bin
+# 加载环境变量
+EnvironmentFile=/opt/child-schedule-assistant/.env
+ExecStart=/opt/child-schedule-assistant/venv/bin/streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+### 3.3 服务器环境配置
 
 #### Ubuntu/Debian
 
@@ -130,7 +182,7 @@ sudo yum install -y gcc gcc-c++ make
 sudo yum install -y git
 ```
 
-### 3.3 从 GitHub 克隆并部署
+### 3.4 从 GitHub 克隆并部署
 
 ```bash
 # 进入你想要部署的目录
@@ -154,9 +206,13 @@ pip install -r requirements.txt
 
 # 初始化数据库
 python database.py
+
+# 配置环境变量
+cp .env.example .env
+nano .env  # 编辑并填写实际配置
 ```
 
-### 3.4 使用 Systemd 管理服务
+### 3.5 使用 Systemd 管理服务
 
 创建 Streamlit 服务文件：
 
@@ -171,6 +227,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/child-schedule-assistant
 Environment=PATH=/opt/child-schedule-assistant/venv/bin
+EnvironmentFile=/opt/child-schedule-assistant/.env
 ExecStart=/opt/child-schedule-assistant/venv/bin/streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 Restart=always
 RestartSec=10
@@ -221,7 +278,7 @@ sudo systemctl status schedule-assistant.service
 sudo systemctl status schedule-assistant-scheduler.service
 ```
 
-### 3.5 配置 Nginx 反向代理（推荐）
+### 3.6 配置 Nginx 反向代理（推荐）
 
 安装 Nginx：
 
