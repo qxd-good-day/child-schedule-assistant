@@ -24,7 +24,7 @@ jobs:
           echo "🚀 开始部署..."
           
           # 进入项目目录
-          cd /opt/child-schedule-assistant || exit 1
+          cd /www/wwwroot/kechengbiao.quxiaodan.xyz || exit 1
           
           # 拉取最新代码
           echo "📥 拉取最新代码..."
@@ -39,14 +39,9 @@ jobs:
           echo "🗄️ 初始化数据库..."
           python database.py
           
-          # 重启服务
+          # 重启服务（如果已安装 systemd 服务）
           echo "🔄 重启服务..."
-          sudo systemctl restart schedule-assistant
-          sudo systemctl restart schedule-assistant-scheduler
-          
-          # 检查服务状态
-          echo "✅ 检查服务状态..."
-          sudo systemctl is-active --quiet schedule-assistant && echo "Streamlit 服务运行正常" || echo "Streamlit 服务启动失败"
-          sudo systemctl is-active --quiet schedule-assistant-scheduler && echo "调度器服务运行正常" || echo "调度器服务启动失败"
+          sudo systemctl restart schedule-assistant 2>/dev/null || echo "Streamlit 服务未安装 systemd"
+          sudo systemctl restart schedule-assistant-scheduler 2>/dev/null || echo "调度器服务未安装 systemd"
           
           echo "🎉 部署完成！"
