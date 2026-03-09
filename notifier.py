@@ -36,7 +36,7 @@ NOTIFICATION_CONFIG = {
     "this_week_footer": "\n---\n💪 本周加油！",
 
     # 课程开始前提醒模板
-    "reminder_title": "⏰ 课程即将开始：{course_name}",
+    "reminder_title": "⏰ 课程即将开始咯：{course_name}",
     "reminder_content": "**{course_name}** 将在30分钟后开始\n\n📍 地点：{location}\n🕐 时间：{start_time}\n{pickup_info}\n\n🚗 准备好出发了吗？",
 
     # 是否使用 Markdown 格式（推荐开启）
